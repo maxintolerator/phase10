@@ -190,28 +190,6 @@ export default {
             ],
         }
     },
-    // mounted() {
-    //     if (this.random) {
-    //         this.rows.forEach((row) => {
-    //             row.phases = this.shuffle([
-    //                 "2 Sets of 3",
-    //                 "Set of 3, Run of 4",
-    //                 "Set of 4, Run of 4",
-    //                 "Run of 7",
-    //                 "Run of 8",
-    //                 "Run of 9",
-    //                 "2 Sets of 4",
-    //                 "7 Cards of 1 Color",
-    //                 "Set of 5, Set of 2",
-    //                 "Set of 5, Set of 3",
-    //             ])
-    //         })
-    //     } else {
-    //         this.rows.forEach((row) => {
-    //             row.phases = this.phases
-    //         })
-    //     }
-    // },
     methods: {
         isLeadingPlayer(row) {
             const phases = this.rows.map((row) => row.phase)
