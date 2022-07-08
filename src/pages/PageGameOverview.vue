@@ -1,7 +1,17 @@
 <template>
     <q-page class="row justify-center">
         <div class="text-white text-h5 q-mt-lg">Round: {{ round }}</div>
+
         <div style="width: 100%">
+            <div class="row justify-center items-center q-my-md">
+                <q-checkbox
+                    dark
+                    class="text-white"
+                    v-model="random"
+                    label="Random Mode"
+                    style="margin: 0 auto"
+                />
+            </div>
             <q-table
                 hide-bottom
                 class="transparent no-box-shadow"
@@ -14,8 +24,11 @@
                 <template v-slot:body="props">
                     <q-tr :props="props">
                         <q-td key="dealer" :props="props">
-                            <q-badge v-if="props.row.isDealer" color="green"
+                            <q-badge v-if="props.row.isDealer" color="red"
                                 >D</q-badge
+                            >
+                            <q-badge v-if="props.row.isStarting" color="green"
+                                >S</q-badge
                             >
                         </q-td>
                         <q-td
@@ -53,7 +66,11 @@
                                         {{ props.row.phase }}
                                     </div>
                                     <div class="text-subtitle2">
-                                        {{ phases[props.row.phase - 1] }}
+                                        {{
+                                            props.row.phases[
+                                                props.row.phase - 1
+                                            ]
+                                        }}
                                     </div>
                                 </div>
 
@@ -100,6 +117,7 @@ export default {
     },
     data() {
         return {
+            random: false,
             phases: [
                 "2 Sets of 3",
                 "Set of 3, Run of 4",
@@ -115,31 +133,37 @@ export default {
             round: 1,
             rows: [
                 {
+                    index: 0,
                     name: "Max",
                     phase: 1,
                     score: 0,
                     isDealer: true,
                     isStarting: false,
+                    phases: [],
                 },
                 {
+                    index: 1,
                     name: "Anastasia",
                     phase: 1,
                     score: 0,
                     isDealer: false,
                     isStarting: true,
+                    phases: [],
                 },
                 {
+                    index: 2,
                     name: "Martin",
                     phase: 1,
                     score: 0,
                     isDealer: false,
                     isStarting: false,
+                    phases: [],
                 },
             ],
             columns: [
                 {
                     name: "dealer",
-                    label: "Dealer",
+                    label: "Dealer/Starter",
                     align: "center",
                     field: "isDealer",
                 },
@@ -166,6 +190,28 @@ export default {
             ],
         }
     },
+    // mounted() {
+    //     if (this.random) {
+    //         this.rows.forEach((row) => {
+    //             row.phases = this.shuffle([
+    //                 "2 Sets of 3",
+    //                 "Set of 3, Run of 4",
+    //                 "Set of 4, Run of 4",
+    //                 "Run of 7",
+    //                 "Run of 8",
+    //                 "Run of 9",
+    //                 "2 Sets of 4",
+    //                 "7 Cards of 1 Color",
+    //                 "Set of 5, Set of 2",
+    //                 "Set of 5, Set of 3",
+    //             ])
+    //         })
+    //     } else {
+    //         this.rows.forEach((row) => {
+    //             row.phases = this.phases
+    //         })
+    //     }
+    // },
     methods: {
         isLeadingPlayer(row) {
             const phases = this.rows.map((row) => row.phase)
@@ -222,6 +268,52 @@ export default {
             const nextStarterIndex = (starterIndex + 1) % this.rows.length
             this.rows[nextStarterIndex].isStarting = true
             this.rows[starterIndex].isStarting = false
+        },
+        shuffle(array) {
+            var currentIndex = array.length,
+                temporaryValue,
+                randomIndex
+
+            // While there remain elements to shuffle...
+            while (0 !== currentIndex) {
+                // Pick a remaining element...
+                randomIndex = Math.floor(Math.random() * currentIndex)
+                currentIndex -= 1
+
+                // And swap it with the current element.
+                temporaryValue = array[currentIndex]
+                array[currentIndex] = array[randomIndex]
+                array[randomIndex] = temporaryValue
+            }
+
+            return array
+        },
+    },
+    watch: {
+        random: {
+            handler(val) {
+                if (val) {
+                    this.rows.forEach((row) => {
+                        row.phases = this.shuffle([
+                            "2 Sets of 3",
+                            "Set of 3, Run of 4",
+                            "Set of 4, Run of 4",
+                            "Run of 7",
+                            "Run of 8",
+                            "Run of 9",
+                            "2 Sets of 4",
+                            "7 Cards of 1 Color",
+                            "Set of 5, Set of 2",
+                            "Set of 5, Set of 3",
+                        ])
+                    })
+                } else {
+                    this.rows.forEach((row) => {
+                        row.phases = this.phases
+                    })
+                }
+            },
+            immediate: true,
         },
     },
 }
