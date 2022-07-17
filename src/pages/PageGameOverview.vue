@@ -3,15 +3,6 @@
         <div class="text-white text-h5 q-mt-lg">Round: {{ round }}</div>
 
         <div style="width: 100%">
-            <div class="row justify-center items-center q-my-md">
-                <q-checkbox
-                    dark
-                    class="text-white"
-                    v-model="random"
-                    label="Random Mode"
-                    style="margin: 0 auto"
-                />
-            </div>
             <q-table
                 hide-bottom
                 class="transparent no-box-shadow"
@@ -20,6 +11,8 @@
                 :rows="rows"
                 :columns="columns"
                 row-key="name"
+                style="min-height: 500px"
+                :rows-per-page-options="[6]"
             >
                 <template v-slot:body="props">
                     <q-tr :props="props">
@@ -97,27 +90,50 @@
             </q-table>
         </div>
         <q-footer
-            class="transparent row justify-center items-center q-pa-md q-mb-xl"
-            ><q-btn color="secondary" full-width @click="nextRound"
+            class="transparent row justify-center items-center q-pa-md q-mb-xl q-gutter-x-md"
+            ><q-btn color="green" full-width @click="nextRound"
                 >Next Round</q-btn
-            ></q-footer
-        >
+            >
+            <q-btn color="secondary" full-width @click="endGame"
+                >End Game</q-btn
+            >
+        </q-footer>
     </q-page>
 </template>
 
 <script>
+import { ref } from "vue"
 import { useQuasar } from "quasar"
+import { usePlayersStore } from "../stores/player"
+import { useRandomStore } from "../stores/random"
 export default {
     setup() {
         const quasar = useQuasar()
-
+        const store = usePlayersStore()
+        const randomStore = useRandomStore()
+        const random = ref(randomStore.random)
+        const rows = ref([])
+        store.players.forEach((player, index) => {
+            const newPlayer = {
+                index: index,
+                name: player.name,
+                phase: 1,
+                score: 0,
+                isDealer: index == 0 ? true : false,
+                isStarting: index == 1 ? true : false,
+                phases: [],
+            }
+            rows.value.push(newPlayer)
+        })
         return {
+            store,
             quasar,
+            rows,
+            random,
         }
     },
     data() {
         return {
-            random: false,
             phases: [
                 "2 Sets of 3",
                 "Set of 3, Run of 4",
@@ -131,35 +147,6 @@ export default {
                 "Set of 5, Set of 3",
             ],
             round: 1,
-            rows: [
-                {
-                    index: 0,
-                    name: "Max",
-                    phase: 1,
-                    score: 0,
-                    isDealer: true,
-                    isStarting: false,
-                    phases: [],
-                },
-                {
-                    index: 1,
-                    name: "Anastasia",
-                    phase: 1,
-                    score: 0,
-                    isDealer: false,
-                    isStarting: true,
-                    phases: [],
-                },
-                {
-                    index: 2,
-                    name: "Martin",
-                    phase: 1,
-                    score: 0,
-                    isDealer: false,
-                    isStarting: false,
-                    phases: [],
-                },
-            ],
             columns: [
                 {
                     name: "dealer",
@@ -193,14 +180,14 @@ export default {
     methods: {
         isLeadingPlayer(row) {
             const phases = this.rows.map((row) => row.phase)
-            const numberOfMaxScores = new Map(
+            const numberOfPlayersInMaxPhase = new Map(
                 [...new Set(phases)].map((x) => [
                     x,
                     phases.filter((y) => y === x).length,
                 ])
             )
             const maxPhase = Math.max(...phases)
-            if (numberOfMaxScores.get(maxPhase) > 1) {
+            if (numberOfPlayersInMaxPhase.get(maxPhase) > 1) {
                 const maxPhaseRows = this.rows.filter(
                     (row) => row.phase === maxPhase
                 )
@@ -232,6 +219,29 @@ export default {
                 })
                 .onOk((data) => {
                     row.score = row.score + parseInt(data)
+                })
+        },
+        endGame() {
+            this.quasar
+                .dialog({
+                    title: "End Game",
+                    message: "Would you like to end this game?",
+                    cancel: true,
+                    persistent: true,
+                })
+                .onOk(() => {
+                    this.store.resetPlayers()
+                    this.$router.push("/")
+                })
+                .onOk(() => {
+                    this.store.resetPlayers()
+                    this.$router.push("/")
+                })
+                .onCancel(() => {
+                    // console.log('>>>> Cancel')
+                })
+                .onDismiss(() => {
+                    // console.log('I am triggered on both OK and Cancel')
                 })
         },
         nextRound() {
